@@ -1,54 +1,76 @@
 import { Router } from 'express';
-import passport from 'passport';
-import { body, validationResult } from 'express-validator';
+import bcrypt from 'bcrypt';
+import { db } from '../db'; // Drizzle ORM instance
 
 const router = Router();
 
-// POST /register
-router.post('/register', [ 
-    body('username').isString(), 
-    body('password').isString()
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+// Register route
+router.post('/register', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        // Validate input
+        if (!username || !password) {
+            return res.status(400).json({ message: 'Username and password are required' });
+        }
+
+        // Hash password
+        const saltRounds = 10;
+        const passwordHash = await bcrypt.hash(password, saltRounds);
+
+        // Save user in database
+        await db.users.insert({ username, passwordHash });
+
+        return res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Server error' });
     }
-    
-    const { username, password } = req.body;
-
-    // Add logic to save the user (hashing password, etc.)
-    // Example: await User.create({ username, password });
-
-    res.status(201).json({ message: 'User created successfully' });
 });
 
-// POST /login
-router.post('/login', passport.authenticate('local'), (req, res) => {
-    res.status(200).json({ message: 'Logged in successfully', user: req.user });
+// Login route
+router.post('/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        // Fetch user from database
+        const user = await db.users.findOne({ where: { username } });
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Compare passwords
+        const match = await bcrypt.compare(password, user.passwordHash);
+        if (!match) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Set user session or token (pseudo-code)
+        // req.session.user = user;
+        return res.status(200).json({ message: 'Logged in successfully' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Server error' });
+    }
 });
 
-// POST /logout
+// Logout route
 router.post('/logout', (req, res) => {
-    req.logout();
-    res.status(200).json({ message: 'Logged out successfully' });
+    // Destroy user session or token
+    // req.session.destroy();
+    return res.status(200).json({ message: 'Logged out successfully' });
 });
 
-// GET /user
+// Get user route
 router.get('/user', (req, res) => {
-    if (req.user) {
-        res.status(200).json(req.user);
-    } else {
-        res.status(401).json({ message: 'Not authenticated' });
-    }
+    // Get user info from session or token
+    // const user = req.session.user;
+    return res.status(200).json({ user: 'User info here' }); // Replace with actual user info
 });
 
-// GET /check
-router.get('/check', (req, res) => {
-    if (req.isAuthenticated()) {
-        res.status(200).json({ authenticated: true });
-    } else {
-        res.status(401).json({ authenticated: false });
-    }
+// Check authentication status route
+router.get('/check-auth', (req, res) => {
+    // Check if user is authenticated
+    // const authenticated = !!req.session.user;
+    return res.status(200).json({ authenticated: true }); // Replace with actual authentication check
 });
 
 export default router;
