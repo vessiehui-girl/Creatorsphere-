@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 interface RegisterCredentials {
   email: string;
   password: string;
+  name?: string;
 }
 
 async function registerFn(credentials: RegisterCredentials) {

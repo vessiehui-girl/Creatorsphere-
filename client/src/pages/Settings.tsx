@@ -1,30 +1,29 @@
 import React, { useState } from 'react';
 
+type NotificationKey = 'messages' | 'likes' | 'comments' | 'scheduleReminders' | 'sphereIntel';
+
 const Settings = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [niche, setNiche] = useState('');
   const [bio, setBio] = useState('');
-  const [notifications, setNotifications] = useState({
+  const [notifications, setNotifications] = useState<Record<NotificationKey, boolean>>({
     messages: false,
     likes: false,
     comments: false,
     scheduleReminders: false,
-    sphereIntel: false
+    sphereIntel: false,
   });
 
   const handleSave = () => {
-    // Logic to save changes
     setIsEditing(false);
   };
 
-  const handleUpgrade = () => {
-    // Logic to upgrade membership
-  };
+  const handleUpgrade = () => {};
 
-  const handleToggleNotification = (name) => {
-    setNotifications(prev => ({ ...prev, [name]: !prev[name] }));
+  const handleToggleNotification = (name: NotificationKey) => {
+    setNotifications((prev) => ({ ...prev, [name]: !prev[name] }));
   };
 
   return (
@@ -32,8 +31,7 @@ const Settings = () => {
       <h1>Settings</h1>
       <div className="profile-card">
         <img src="/path/to/avatar" alt="Avatar" />
-        <h2>{username}</h2>
-        <p>{displayName}</p>
+        <h2>{displayName}</h2>
         <button onClick={() => setIsEditing(!isEditing)}>{isEditing ? 'Cancel' : 'Edit'}</button>
       </div>
       {isEditing && (
@@ -73,7 +71,7 @@ const Settings = () => {
       </div>
       <div className="notification-toggles">
         <h2>Notification Settings</h2>
-        {Object.keys(notifications).map((key) => (
+        {(Object.keys(notifications) as NotificationKey[]).map((key) => (
           <div key={key}>
             <label>
               <input

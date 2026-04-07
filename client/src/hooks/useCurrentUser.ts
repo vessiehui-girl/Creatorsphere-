@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 export interface CurrentUser {
   id: number;
   email: string;
+  name?: string | null;
 }
 
 async function fetchCurrentUser(): Promise<CurrentUser> {
