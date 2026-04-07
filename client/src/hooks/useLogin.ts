@@ -6,7 +6,7 @@ interface LoginCredentials {
 }
 
 async function loginFn(credentials: LoginCredentials) {
-  const res = await fetch('/login', {
+  const res = await fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',

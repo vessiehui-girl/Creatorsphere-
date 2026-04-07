@@ -1,12 +1,12 @@
 import React from 'react';
-import { useLocation } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useLogout } from '../hooks/useLogout';
 
 const HomePage = () => {
     const { data: user } = useCurrentUser();
     const logoutMutation = useLogout();
-    const [, navigate] = useLocation();
+    const navigate = useNavigate();
 
     const handleLogout = () => {
         logoutMutation.mutate(undefined, {

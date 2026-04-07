@@ -6,7 +6,7 @@ export interface CurrentUser {
 }
 
 async function fetchCurrentUser(): Promise<CurrentUser> {
-  const res = await fetch('/me', { credentials: 'include' });
+  const res = await fetch('/api/auth/me', { credentials: 'include' });
   if (res.status === 401) {
     throw new Error('Not authenticated');
   }

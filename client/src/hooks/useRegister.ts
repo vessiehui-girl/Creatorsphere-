@@ -6,7 +6,7 @@ interface RegisterCredentials {
 }
 
 async function registerFn(credentials: RegisterCredentials) {
-  const res = await fetch('/register', {
+  const res = await fetch('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',

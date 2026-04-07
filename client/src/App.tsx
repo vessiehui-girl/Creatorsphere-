@@ -1,7 +1,7 @@
 // client/src/App.tsx
 
 import React from 'react';
-import { Switch, Route, Redirect } from 'wouter';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import AuthPage from './pages/AuthPage';
 import HomePage from './pages/HomePage';
 import { useCurrentUser } from './hooks/useCurrentUser';
@@ -20,17 +20,20 @@ const App: React.FC = () => {
     const isAuthenticated = !!user && !error;
 
     return (
-        <Switch>
-            <Route path="/auth">
-                {isAuthenticated ? <Redirect to="/" /> : <AuthPage />}
-            </Route>
-            <Route path="/">
-                {isAuthenticated ? <HomePage /> : <Redirect to="/auth" />}
-            </Route>
-            <Route>
-                <Redirect to={isAuthenticated ? '/' : '/auth'} />
-            </Route>
-        </Switch>
+        <Routes>
+            <Route
+                path="/auth"
+                element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage />}
+            />
+            <Route
+                path="/"
+                element={isAuthenticated ? <HomePage /> : <Navigate to="/auth" replace />}
+            />
+            <Route
+                path="*"
+                element={<Navigate to={isAuthenticated ? '/' : '/auth'} replace />}
+            />
+        </Routes>
     );
 };
 
