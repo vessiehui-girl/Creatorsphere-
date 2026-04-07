@@ -23,6 +23,11 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json());
 
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+  console.error('SESSION_SECRET environment variable is required in production');
+  process.exit(1);
+}
+
 const MemStore = MemoryStore(session);
 
 app.use(

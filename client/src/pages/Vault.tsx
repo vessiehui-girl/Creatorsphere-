@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import VaultFolderCard from '@/components/vault/VaultFolderCard';
 import UploadButton from '@/components/vault/UploadButton';
 import { useVault } from '@/hooks/useVault';
