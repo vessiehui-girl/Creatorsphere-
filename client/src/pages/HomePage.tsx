@@ -37,7 +37,7 @@ const HomePage = () => {
                 {/* Greeting */}
                 <section>
                     <h2 className="text-2xl font-semibold">
-                        Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}! 👋
+                        Welcome back{user?.email ? `, ${user.email.split('@')[0] || user.email}` : ''}! 👋
                     </h2>
                     <p className="text-gray-400 mt-1">Here's what's happening with your content today.</p>
                 </section>

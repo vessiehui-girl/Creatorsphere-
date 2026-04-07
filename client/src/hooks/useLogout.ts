@@ -16,7 +16,6 @@ export function useLogout() {
   return useMutation({
     mutationFn: logoutFn,
     onSuccess: () => {
-      queryClient.setQueryData(['currentUser'], null);
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
     },
   });
