@@ -26,18 +26,22 @@ router.post('/connect', requireAuth, async (req, res) => {
       return res.status(400).json({ message: 'platforms must be an array' });
     }
     const userId = req.session.userId!;
+
+    const existing = await db
+      .select()
+      .from(connectedPlatforms)
+      .where(and(eq(connectedPlatforms.userId, userId)));
+
+    const existingMap = new Map(existing.map((p) => [p.platform, p]));
     const results = [];
+
     for (const platform of platforms) {
-      const existing = await db
-        .select()
-        .from(connectedPlatforms)
-        .where(and(eq(connectedPlatforms.userId, userId), eq(connectedPlatforms.platform, platform)))
-        .limit(1);
-      if (existing.length > 0) {
+      const record = existingMap.get(platform);
+      if (record) {
         const [updated] = await db
           .update(connectedPlatforms)
           .set({ connected: true })
-          .where(eq(connectedPlatforms.id, existing[0].id))
+          .where(eq(connectedPlatforms.id, record.id))
           .returning();
         results.push(updated);
       } else {

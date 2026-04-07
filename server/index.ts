@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import session from 'express-session';
 import MemoryStore from 'memorystore';
+import rateLimit from 'express-rate-limit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRouter from './routes/auth.js';
@@ -38,12 +39,21 @@ app.use(
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24,
     },
   })
 );
 
-app.use('/api/auth', authRouter);
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests, please try again later' },
+});
+
+app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/platforms', platformsRouter);
 app.use('/api/vault', vaultRouter);
 app.use('/api/posts', postsRouter);
