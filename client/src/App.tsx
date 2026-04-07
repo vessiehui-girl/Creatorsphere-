@@ -1,48 +1,36 @@
 // client/src/App.tsx
 
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
-import AuthPage from './pages/AuthPage'; // Assuming you have an AuthPage component
-import HomePage from './pages/HomePage'; // Assuming you have a HomePage component
-import { checkAuth } from './auth'; // function to check auth status
+import React from 'react';
+import { Switch, Route, Redirect } from 'wouter';
+import AuthPage from './pages/AuthPage';
+import HomePage from './pages/HomePage';
+import { useCurrentUser } from './hooks/useCurrentUser';
 
 const App: React.FC = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  
-    useEffect(() => {
-        const initializeAuth = async () => {
-            const authStatus = await checkAuth(); // Replace with your actual auth checking logic
-            setIsAuthenticated(authStatus);
-        };
-        initializeAuth();
-    }, []);
-  
-    if (isAuthenticated === null) {
-        // Loading state while checking authentication
-        return <div>Loading...</div>;
+    const { data: user, isLoading, error } = useCurrentUser();
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
+                Loading...
+            </div>
+        );
     }
-  
-    const ProtectedRoute = ({ component: Component, ...rest }: any) => (
-        <Route
-            {...rest}
-            render={props =>
-                isAuthenticated ? (
-                    <Component {...props} />
-                ) : (
-                    <Redirect to="/auth" />
-                )
-            }
-        />
-    );
-  
+
+    const isAuthenticated = !!user && !error;
+
     return (
-        <Router>
-            <Switch>
-                <ProtectedRoute path="/" exact component={HomePage} />
-                <Route path="/auth" component={AuthPage} />
-                <Redirect to="/auth" />
-            </Switch>
-        </Router>
+        <Switch>
+            <Route path="/auth">
+                {isAuthenticated ? <Redirect to="/" /> : <AuthPage />}
+            </Route>
+            <Route path="/">
+                {isAuthenticated ? <HomePage /> : <Redirect to="/auth" />}
+            </Route>
+            <Route>
+                <Redirect to={isAuthenticated ? '/' : '/auth'} />
+            </Route>
+        </Switch>
     );
 };
 
