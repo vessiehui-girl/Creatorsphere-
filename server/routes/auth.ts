@@ -1,50 +1,80 @@
-import { Drizzle } from 'drizzle-orm';
-import bcrypt from 'bcrypt';
+import { Router, Request, Response, NextFunction } from 'express';
+import passport from '../auth.js';
+import { hashPassword } from '../auth.js';
+import { createUser, getUserByEmail, getUserByUsername } from '../storage.js';
+import type { User } from '../../shared/schema.js';
 
-const db = new Drizzle();
+const router = Router();
 
-// Register route
-app.post('/register', async (req, res) => {
-    const { email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await db.insert('users').values({ email, password: hashedPassword });
-    res.status(201).send('User registered');
-});
+// POST /api/auth/register
+router.post('/register', async (req: Request, res: Response) => {
+  try {
+    const { username, email, password } = req.body;
 
-// Login route
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    const user = await db.select('users').where({ email }).first();
-    if (user && await bcrypt.compare(password, user.password)) {
-        // Logic for setting user session
-        res.send('Login successful');
-    } else {
-        res.status(401).send('Invalid credentials');
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'Username, email and password are required.' });
     }
-});
 
-// Logout route
-app.post('/logout', async (req, res) => {
-    // Logic for destroying session
-    res.send('Logged out');
-});
-
-// /me endpoint
-app.get('/me', async (req, res) => {
-    const userId = req.session.userId;  // Assume user ID is stored in session
-    const user = await db.select('users').where({ id: userId }).first();
-    if (user) {
-        res.send({ id: user.id, email: user.email });
-    } else {
-        res.status(401).send('Not authenticated');
+    const existingUsername = await getUserByUsername(username);
+    if (existingUsername) {
+      return res.status(409).json({ message: 'Username already taken.' });
     }
+
+    const existingEmail = await getUserByEmail(email);
+    if (existingEmail) {
+      return res.status(409).json({ message: 'Email already registered.' });
+    }
+
+    const passwordHash = await hashPassword(password);
+    const user = await createUser({ username, email, passwordHash });
+
+    req.login(user, (err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Login after registration failed.' });
+      }
+      const { passwordHash: _, ...safeUser } = user;
+      return res.status(201).json(safeUser);
+    });
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({ message: 'Registration failed.' });
+  }
 });
 
-// /check endpoint
-app.get('/check', (req, res) => {
-    if (req.session.userId) {
-        res.send({ authenticated: true });
-    } else {
-        res.send({ authenticated: false });
+// POST /api/auth/login
+router.post('/login', (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate('local', (err: Error | null, user: User | false, info: { message: string }) => {
+    if (err) {
+      return next(err);
     }
+    if (!user) {
+      return res.status(401).json({ message: info?.message ?? 'Authentication failed.' });
+    }
+    req.login(user, (loginErr) => {
+      if (loginErr) {
+        return next(loginErr);
+      }
+      const { passwordHash: _, ...safeUser } = user;
+      return res.json(safeUser);
+    });
+  })(req, res, next);
 });
+
+// POST /api/auth/logout
+router.post('/logout', (req: Request, res: Response, next: NextFunction) => {
+  req.logout((err) => {
+    if (err) return next(err);
+    res.json({ message: 'Logged out successfully.' });
+  });
+});
+
+// GET /api/auth/me
+router.get('/me', (req: Request, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Not authenticated.' });
+  }
+  const { passwordHash: _, ...safeUser } = req.user as User;
+  res.json(safeUser);
+});
+
+export default router;
