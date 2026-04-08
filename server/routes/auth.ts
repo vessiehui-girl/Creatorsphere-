@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
 import passport from '../auth.js';
 import { hashPassword } from '../auth.js';
 import { createUser, getUserByEmail, getUserByUsername } from '../storage.js';
@@ -6,8 +7,16 @@ import type { User } from '../../shared/schema.js';
 
 const router = Router();
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests, please try again later.' },
+});
+
 // POST /api/auth/register
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', authLimiter, async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body;
 
@@ -42,7 +51,7 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 // POST /api/auth/login
-router.post('/login', (req: Request, res: Response, next: NextFunction) => {
+router.post('/login', authLimiter, (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate('local', (err: Error | null, user: User | false, info: { message: string }) => {
     if (err) {
       return next(err);

@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import requireAuth from '../middleware/requireAuth.js';
 import {
   getScheduledPostsByUserId,
+  getScheduledPostById,
   createScheduledPost,
   deleteScheduledPost,
   getPostById,
@@ -53,9 +54,14 @@ router.post('/schedule', requireAuth, async (req: Request, res: Response) => {
 // DELETE /api/planner/:id
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
   try {
+    const userId = (req.user as User).id;
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) {
       return res.status(400).json({ message: 'Invalid schedule ID.' });
+    }
+    const scheduled = await getScheduledPostById(id);
+    if (!scheduled || scheduled.userId !== userId) {
+      return res.status(404).json({ message: 'Scheduled post not found.' });
     }
     await deleteScheduledPost(id);
     res.json({ message: 'Scheduled post removed.' });

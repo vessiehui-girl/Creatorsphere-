@@ -1,4 +1,4 @@
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { db } from './db.js';
 import {
   users, connectedPlatforms, vaultItems, posts, scheduledPosts, analyticsSnapshots,
@@ -48,7 +48,7 @@ export async function createPlatform(data: InsertConnectedPlatform): Promise<Con
 export async function deletePlatform(id: number, userId: number): Promise<void> {
   await db
     .delete(connectedPlatforms)
-    .where(eq(connectedPlatforms.id, id));
+    .where(and(eq(connectedPlatforms.id, id), eq(connectedPlatforms.userId, userId)));
 }
 
 // --- Vault Items ---
@@ -125,6 +125,11 @@ export async function getScheduledPostsByUserId(userId: number): Promise<Schedul
     .from(scheduledPosts)
     .where(eq(scheduledPosts.userId, userId))
     .orderBy(desc(scheduledPosts.scheduledFor));
+}
+
+export async function getScheduledPostById(id: number): Promise<ScheduledPost | undefined> {
+  const [scheduled] = await db.select().from(scheduledPosts).where(eq(scheduledPosts.id, id));
+  return scheduled;
 }
 
 export async function createScheduledPost(data: InsertScheduledPost): Promise<ScheduledPost> {

@@ -19,6 +19,27 @@ app.use(
   }),
 );
 
+// CSRF protection: reject state-changing requests from unexpected origins
+app.use((req, res, next) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+    const origin = req.get('Origin');
+    const host = req.get('Host');
+    if (origin) {
+      try {
+        const originHost = new URL(origin).host;
+        const allowed = [FRONTEND_URL, `http://localhost:${PORT}`, `http://0.0.0.0:${PORT}`]
+          .map((u) => new URL(u).host);
+        if (!allowed.includes(originHost) && originHost !== host) {
+          return res.status(403).json({ message: 'CSRF check failed.' });
+        }
+      } catch {
+        return res.status(403).json({ message: 'Invalid origin.' });
+      }
+    }
+  }
+  next();
+});
+
 // Body parsing
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ extended: true, limit: '100mb' }));
