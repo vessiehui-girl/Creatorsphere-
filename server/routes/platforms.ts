@@ -30,7 +30,7 @@ router.post('/connect', requireAuth, async (req, res) => {
     const existing = await db
       .select()
       .from(connectedPlatforms)
-      .where(and(eq(connectedPlatforms.userId, userId)));
+      .where(eq(connectedPlatforms.userId, userId));
 
     const existingMap = new Map(existing.map((p) => [p.platform, p]));
     const results = [];
