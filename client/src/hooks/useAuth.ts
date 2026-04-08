@@ -1,75 +1,83 @@
-import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from 'react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+interface User {
+  id: number;
+  email: string;
+}
+
+const fetchCurrentUser = async (): Promise<User | null> => {
+  const response = await fetch('/api/auth/me');
+  if (response.status === 401) return null;
+  if (!response.ok) throw new Error('Error fetching current user');
+  return response.json();
+};
+
+const loginFn = async ({ email, password }: { email: string; password: string }): Promise<User> => {
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.message ?? 'Invalid credentials');
+  }
+  return response.json();
+};
+
+const registerFn = async ({ email, password }: { email: string; password: string }): Promise<User> => {
+  const response = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.message ?? 'Error registering');
+  }
+  return response.json();
+};
+
+const logoutFn = async (): Promise<void> => {
+  await fetch('/api/auth/logout', { method: 'POST' });
+};
 
 const useAuth = () => {
-    const [currentUser, setCurrentUser] = useState(null);
-    const { data, isLoading, error } = useQuery('currentUser', fetchCurrentUser);
+  const queryClient = useQueryClient();
 
-    const loginMutation = useMutation(login, {
-        onSuccess: (data) => {
-            setCurrentUser(data.user);
-            sessionStorage.setItem('user', JSON.stringify(data.user));
-        }
-    });
+  const { data: currentUser, isPending: isLoading } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: fetchCurrentUser,
+  });
 
-    const registerMutation = useMutation(register, {
-        onSuccess: (data) => {
-            setCurrentUser(data.user);
-            sessionStorage.setItem('user', JSON.stringify(data.user));
-        }
-    });
+  const loginMutation = useMutation({
+    mutationFn: loginFn,
+    onSuccess: (user) => {
+      queryClient.setQueryData(['currentUser'], user);
+    },
+  });
 
-    const logout = () => {
-        setCurrentUser(null);
-        sessionStorage.removeItem('user');
-    };
+  const registerMutation = useMutation({
+    mutationFn: registerFn,
+    onSuccess: (user) => {
+      queryClient.setQueryData(['currentUser'], user);
+    },
+  });
 
-    const checkAuth = () => {
-        const storedUser = sessionStorage.getItem('user');
-        if (storedUser) {
-            setCurrentUser(JSON.parse(storedUser));
-        }
-    };
+  const logoutMutation = useMutation({
+    mutationFn: logoutFn,
+    onSuccess: () => {
+      queryClient.setQueryData(['currentUser'], null);
+    },
+  });
 
-    useEffect(() => {
-        checkAuth();
-    }, []);
-
-    const login = async (username, password) => {
-        return await loginMutation.mutateAsync({ username, password });
-    };
-
-    const register = async (username, password) => {
-        return await registerMutation.mutateAsync({ username, password });
-    };
-
-    return { currentUser, isLoading, error, login, logout, register };
-};
-
-const fetchCurrentUser = async () => {
-    const response = await fetch('/api/currentUser');
-    if (!response.ok) throw new Error('Error fetching current user');
-    return response.json();
-};
-
-const login = async ({ username, password }) => {
-    const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-    });
-    if (!response.ok) throw new Error('Error logging in');
-    return response.json();
-};
-
-const register = async ({ username, password }) => {
-    const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-    });
-    if (!response.ok) throw new Error('Error registering');
-    return response.json();
+  return {
+    currentUser,
+    isLoading,
+    login: loginMutation.mutateAsync,
+    register: registerMutation.mutateAsync,
+    logout: logoutMutation.mutateAsync,
+  };
 };
 
 export default useAuth;
