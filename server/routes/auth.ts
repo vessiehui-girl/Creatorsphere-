@@ -1,50 +1,71 @@
-import { Drizzle } from 'drizzle-orm';
-import bcrypt from 'bcrypt';
+import { Router, Request, Response, NextFunction } from 'express';
+import passport from 'passport';
+import rateLimit from 'express-rate-limit';
+import { db } from '../db';
+import { users } from '../../shared/schema';
+import { hashPassword } from '../auth';
+import { eq } from 'drizzle-orm';
 
-const db = new Drizzle();
+const router = Router();
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests, please try again later' },
+});
 
 // Register route
-app.post('/register', async (req, res) => {
-    const { email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await db.insert('users').values({ email, password: hashedPassword });
-    res.status(201).send('User registered');
+router.post('/register', authLimiter, async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required' });
+  }
+  try {
+    const [existing] = await db.select().from(users).where(eq(users.email, email));
+    if (existing) {
+      return res.status(409).json({ message: 'Email already in use' });
+    }
+    const passwordHash = await hashPassword(password);
+    const [user] = await db.insert(users).values({ email, passwordHash }).returning();
+    req.login(user, (err) => {
+      if (err) return res.status(500).json({ message: 'Login after register failed' });
+      return res.status(201).json({ id: user.id, email: user.email });
+    });
+  } catch {
+    return res.status(500).json({ message: 'Failed to create user' });
+  }
 });
 
 // Login route
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    const user = await db.select('users').where({ email }).first();
-    if (user && await bcrypt.compare(password, user.password)) {
-        // Logic for setting user session
-        res.send('Login successful');
-    } else {
-        res.status(401).send('Invalid credentials');
-    }
+router.post('/login', authLimiter, (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate('local', (err: Error | null, user: Express.User | false, info: { message?: string } | undefined) => {
+    if (err) return next(err);
+    if (!user) return res.status(401).json({ message: info?.message ?? 'Invalid credentials' });
+    req.login(user, (loginErr) => {
+      if (loginErr) return next(loginErr);
+      const u = user as { id: number; email: string };
+      return res.json({ id: u.id, email: u.email });
+    });
+  })(req, res, next);
 });
 
 // Logout route
-app.post('/logout', async (req, res) => {
-    // Logic for destroying session
-    res.send('Logged out');
+router.post('/logout', (req: Request, res: Response, next: NextFunction) => {
+  req.logout((err) => {
+    if (err) return next(err);
+    res.json({ message: 'Logged out' });
+  });
 });
 
 // /me endpoint
-app.get('/me', async (req, res) => {
-    const userId = req.session.userId;  // Assume user ID is stored in session
-    const user = await db.select('users').where({ id: userId }).first();
-    if (user) {
-        res.send({ id: user.id, email: user.email });
-    } else {
-        res.status(401).send('Not authenticated');
-    }
+router.get('/me', (req: Request, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+  const user = req.user as { id: number; email: string };
+  return res.json({ id: user.id, email: user.email });
 });
 
-// /check endpoint
-app.get('/check', (req, res) => {
-    if (req.session.userId) {
-        res.send({ authenticated: true });
-    } else {
-        res.send({ authenticated: false });
-    }
-});
+export default router;
