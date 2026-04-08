@@ -55,7 +55,7 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Vault item not found.' });
     }
 
-    const updated = await updateVaultItem(id, req.body);
+    const updated = await updateVaultItem(id, userId, req.body);
     res.json(updated);
   } catch (error) {
     console.error('Update vault item error:', error);
@@ -77,7 +77,7 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Vault item not found.' });
     }
 
-    await deleteVaultItem(id);
+    await deleteVaultItem(id, userId);
     res.json({ message: 'Vault item deleted.' });
   } catch (error) {
     console.error('Delete vault item error:', error);

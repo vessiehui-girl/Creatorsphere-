@@ -63,7 +63,7 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
     if (!scheduled || scheduled.userId !== userId) {
       return res.status(404).json({ message: 'Scheduled post not found.' });
     }
-    await deleteScheduledPost(id);
+    await deleteScheduledPost(id, userId);
     res.json({ message: 'Scheduled post removed.' });
   } catch (error) {
     console.error('Delete scheduled post error:', error);

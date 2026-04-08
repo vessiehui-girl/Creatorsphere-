@@ -76,7 +76,7 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Post not found.' });
     }
 
-    const updated = await updatePost(id, req.body);
+    const updated = await updatePost(id, userId, req.body);
     res.json(updated);
   } catch (error) {
     console.error('Update post error:', error);
@@ -98,7 +98,7 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Post not found.' });
     }
 
-    await deletePost(id);
+    await deletePost(id, userId);
     res.json({ message: 'Post deleted.' });
   } catch (error) {
     console.error('Delete post error:', error);

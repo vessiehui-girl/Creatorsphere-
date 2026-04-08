@@ -71,17 +71,17 @@ export async function createVaultItem(data: InsertVaultItem): Promise<VaultItem>
   return item;
 }
 
-export async function updateVaultItem(id: number, data: Partial<InsertVaultItem>): Promise<VaultItem | undefined> {
+export async function updateVaultItem(id: number, userId: number, data: Partial<InsertVaultItem>): Promise<VaultItem | undefined> {
   const [item] = await db
     .update(vaultItems)
     .set({ ...data, updatedAt: new Date() })
-    .where(eq(vaultItems.id, id))
+    .where(and(eq(vaultItems.id, id), eq(vaultItems.userId, userId)))
     .returning();
   return item;
 }
 
-export async function deleteVaultItem(id: number): Promise<void> {
-  await db.delete(vaultItems).where(eq(vaultItems.id, id));
+export async function deleteVaultItem(id: number, userId: number): Promise<void> {
+  await db.delete(vaultItems).where(and(eq(vaultItems.id, id), eq(vaultItems.userId, userId)));
 }
 
 // --- Posts ---
@@ -104,17 +104,17 @@ export async function createPost(data: InsertPost): Promise<Post> {
   return post;
 }
 
-export async function updatePost(id: number, data: Partial<InsertPost>): Promise<Post | undefined> {
+export async function updatePost(id: number, userId: number, data: Partial<InsertPost>): Promise<Post | undefined> {
   const [post] = await db
     .update(posts)
     .set({ ...data, updatedAt: new Date() })
-    .where(eq(posts.id, id))
+    .where(and(eq(posts.id, id), eq(posts.userId, userId)))
     .returning();
   return post;
 }
 
-export async function deletePost(id: number): Promise<void> {
-  await db.delete(posts).where(eq(posts.id, id));
+export async function deletePost(id: number, userId: number): Promise<void> {
+  await db.delete(posts).where(and(eq(posts.id, id), eq(posts.userId, userId)));
 }
 
 // --- Scheduled Posts ---
@@ -137,8 +137,8 @@ export async function createScheduledPost(data: InsertScheduledPost): Promise<Sc
   return scheduled;
 }
 
-export async function deleteScheduledPost(id: number): Promise<void> {
-  await db.delete(scheduledPosts).where(eq(scheduledPosts.id, id));
+export async function deleteScheduledPost(id: number, userId: number): Promise<void> {
+  await db.delete(scheduledPosts).where(and(eq(scheduledPosts.id, id), eq(scheduledPosts.userId, userId)));
 }
 
 // --- Analytics ---
