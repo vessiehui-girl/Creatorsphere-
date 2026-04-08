@@ -1,7 +1,7 @@
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcrypt';
-import { User } from './models/User'; // Adjust the path according to your project structure
+import { User } from '@shared/types'; // shared types from src/language/types.ts
 
 // Configure Passport to use LocalStrategy for username/password authentication
 passport.use(new LocalStrategy({
