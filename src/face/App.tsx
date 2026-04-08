@@ -1,10 +1,10 @@
-// client/src/App.tsx
+// src/face/App.tsx
 
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
-import AuthPage from './pages/AuthPage'; // Assuming you have an AuthPage component
-import HomePage from './pages/HomePage'; // Assuming you have a HomePage component
-import { checkAuth } from './auth'; // function to check auth status
+import AuthPage from './screens/Auth/AuthPage';
+import HomePage from './screens/Home/HomePage';
+import { checkAuth } from './api/auth';
 
 const App: React.FC = () => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
