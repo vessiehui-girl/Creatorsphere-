@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
 
 import Landing from '@/pages/Landing';
 import Login from '@/pages/Login';
@@ -39,40 +40,43 @@ const App: React.FC = () => {
   const isAuthed = !!user;
 
   return (
-    <Routes>
-      <Route path="/" element={isAuthed ? <Navigate to="/app/home" replace /> : <Landing />} />
-      <Route path="/login" element={isAuthed ? <Navigate to="/app/home" replace /> : <Login />} />
-      <Route path="/signup" element={isAuthed ? <Navigate to="/app/home" replace /> : <Signup />} />
-      <Route
-        path="/onboarding/platforms"
-        element={isAuthed ? <OnboardingPlatforms /> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/app/home"
-        element={isAuthed ? <AppShell><Home /></AppShell> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/app/create"
-        element={isAuthed ? <AppShell><CreatePost /></AppShell> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/app/vault"
-        element={isAuthed ? <AppShell><Vault /></AppShell> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/app/planner"
-        element={isAuthed ? <AppShell><Planner /></AppShell> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/app/analytics"
-        element={isAuthed ? <AppShell><Analytics /></AppShell> : <Navigate to="/login" replace />}
-      />
-      <Route
-        path="/app/me"
-        element={isAuthed ? <AppShell><Profile /></AppShell> : <Navigate to="/login" replace />}
-      />
-      <Route path="*" element={<Navigate to={isAuthed ? '/app/home' : '/'} replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={isAuthed ? <Navigate to="/app/home" replace /> : <Landing />} />
+        <Route path="/login" element={isAuthed ? <Navigate to="/app/home" replace /> : <Login />} />
+        <Route path="/signup" element={isAuthed ? <Navigate to="/app/home" replace /> : <Signup />} />
+        <Route
+          path="/onboarding/platforms"
+          element={isAuthed ? <OnboardingPlatforms /> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/app/home"
+          element={isAuthed ? <AppShell><Home /></AppShell> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/app/create"
+          element={isAuthed ? <AppShell><CreatePost /></AppShell> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/app/vault"
+          element={isAuthed ? <AppShell><Vault /></AppShell> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/app/planner"
+          element={isAuthed ? <AppShell><Planner /></AppShell> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/app/analytics"
+          element={isAuthed ? <AppShell><Analytics /></AppShell> : <Navigate to="/login" replace />}
+        />
+        <Route
+          path="/app/me"
+          element={isAuthed ? <AppShell><Profile /></AppShell> : <Navigate to="/login" replace />}
+        />
+        <Route path="*" element={<Navigate to={isAuthed ? '/app/home' : '/'} replace />} />
+      </Routes>
+      <VercelAnalytics />
+    </>
   );
 };
 
