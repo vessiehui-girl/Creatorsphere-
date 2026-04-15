@@ -87,16 +87,18 @@ app.use('/api/planner', plannerRouter);
 app.use('/api/analytics', analyticsRouter);
 
 // Serve static frontend in production
-if (isProduction) {
-  const staticPath = path.resolve(__dirname, '../../dist/public');
+if (isProduction && !process.env.VERCEL) {
+  const staticPath = path.resolve(__dirname, 'public');
   app.use(express.static(staticPath));
   app.get('*', (_req, res) => {
     res.sendFile(path.join(staticPath, 'index.html'));
   });
 }
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`API running on port ${PORT}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`API running on port ${PORT}`);
+  });
+}
 
 export default app;

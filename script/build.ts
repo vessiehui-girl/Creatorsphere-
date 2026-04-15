@@ -6,7 +6,7 @@ const run = (cmd: string) => {
 };
 
 console.log("📦 Building frontend...");
-run("npx vite build --outDir dist/public");
+run("npx vite build");
 
 console.log("📦 Building backend...");
 run("npx esbuild server/index.ts --bundle --platform=node --outdir=dist --format=esm --packages=external");
