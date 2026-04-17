@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api';
 
 interface LoginCredentials {
   email: string;
@@ -6,17 +7,10 @@ interface LoginCredentials {
 }
 
 async function loginFn(credentials: LoginCredentials) {
-  const res = await fetch('/api/auth/login', {
+  return apiFetch('/api/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify(credentials),
   });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || 'Login failed');
-  }
-  return res.json().catch(() => null);
 }
 
 export function useLogin() {

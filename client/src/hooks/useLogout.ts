@@ -1,14 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api';
 
 async function logoutFn() {
-  const res = await fetch('/api/auth/logout', {
+  return apiFetch('/api/auth/logout', {
     method: 'POST',
-    credentials: 'include',
   });
-  if (!res.ok) {
-    throw new Error('Logout failed');
-  }
-  return res.json().catch(() => null);
 }
 
 export function useLogout() {

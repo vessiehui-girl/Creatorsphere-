@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiFetch } from '@/lib/api';
 
 interface RegisterCredentials {
   email: string;
@@ -7,17 +8,10 @@ interface RegisterCredentials {
 }
 
 async function registerFn(credentials: RegisterCredentials) {
-  const res = await fetch('/api/auth/register', {
+  return apiFetch('/api/auth/register', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
     body: JSON.stringify(credentials),
   });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || 'Registration failed');
-  }
-  return res.json().catch(() => null);
 }
 
 export function useRegister() {
