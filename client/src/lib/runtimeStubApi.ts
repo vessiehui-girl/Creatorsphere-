@@ -87,6 +87,9 @@ let state = loadState();
 const nextId = <T extends { id: number }>(items: T[]) =>
   items.length ? Math.max(...items.map((i) => i.id)) + 1 : 1;
 
+const isValidId = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isFinite(value) && value > 0;
+
 const ensureUser = () => {
   if (!state.currentUser) {
     state.currentUser = { id: 1, email: 'creator@local.dev', name: 'Creator' };
@@ -181,9 +184,20 @@ export async function runtimeStubApiFetch<T>(path: string, options?: RequestInit
   }
 
   if (path === '/api/planner/schedule' && method === 'POST') {
+    const parsedPostId =
+      typeof body.postId === 'number'
+        ? body.postId
+        : Number.parseInt(String(body.postId ?? ''), 10);
+    let fallbackPostId = state.posts[0]?.id;
+    if (!fallbackPostId) {
+      const post: StubPost = { id: nextId(state.posts), caption: 'Untitled post', status: 'draft' };
+      state.posts = [post, ...state.posts];
+      fallbackPostId = post.id;
+    }
+
     const item: StubPlannerItem = {
       id: nextId(state.planner),
-      postId: Number(body.postId) || (state.posts[0]?.id ?? 1),
+      postId: isValidId(parsedPostId) ? parsedPostId : fallbackPostId,
       platform: body.platform || 'TikTok',
       scheduledFor: body.scheduledFor || new Date().toISOString(),
     };
@@ -203,5 +217,7 @@ export async function runtimeStubApiFetch<T>(path: string, options?: RequestInit
     return stats as T;
   }
 
-  return [] as T;
+  throw new Error(
+    `Runtime stub endpoint not implemented: ${method} ${path}. Add support in runtime stub API.`,
+  );
 }
