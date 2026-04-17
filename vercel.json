@@ -5,6 +5,9 @@
   "installCommand": "npm install",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/((?!.*\\.(js|css|map|json|png|jpg|jpeg|gif|svg|ico|webp|avif|woff|woff2|ttf|eot)$).*)",
+      "destination": "/index.html"
+    }
   ]
 }
