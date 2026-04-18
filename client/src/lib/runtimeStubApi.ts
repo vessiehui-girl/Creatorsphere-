@@ -82,26 +82,34 @@ const saveState = (state: StubState) => {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 };
 
-let state = loadState();
-
 const nextId = <T extends { id: number }>(items: T[]) =>
   items.length ? Math.max(...items.map((i) => i.id)) + 1 : 1;
 
 const isValidId = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0;
 
-const ensureUser = () => {
+const ensureUser = (state: StubState) => {
   if (!state.currentUser) {
     state.currentUser = { id: 1, email: 'creator@local.dev', name: 'Creator' };
   }
 };
 
+const parseOptionalPostId = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value;
+  if (typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const parsed = parseInt(trimmed, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+};
+
 export async function runtimeStubApiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const state = loadState();
   const method = (options?.method || 'GET').toUpperCase();
   const body = parseBody(options);
 
   if (path === '/api/auth/me' && method === 'GET') {
-    ensureUser();
+    ensureUser(state);
     saveState(state);
     return state.currentUser as T;
   }
@@ -184,10 +192,7 @@ export async function runtimeStubApiFetch<T>(path: string, options?: RequestInit
   }
 
   if (path === '/api/planner/schedule' && method === 'POST') {
-    const parsedPostId =
-      typeof body.postId === 'number'
-        ? body.postId
-        : Number.parseInt(String(body.postId ?? ''), 10);
+    const parsedPostId = parseOptionalPostId(body.postId);
     let fallbackPostId = state.posts[0]?.id;
     if (!fallbackPostId) {
       const post: StubPost = { id: nextId(state.posts), caption: 'Untitled post', status: 'draft' };
