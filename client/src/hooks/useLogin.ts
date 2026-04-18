@@ -7,15 +7,27 @@ interface LoginCredentials {
   password: string;
 }
 
+const isCurrentUser = (value: unknown): value is CurrentUser => {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<CurrentUser>;
+  return typeof candidate.id === 'number' && typeof candidate.email === 'string';
+};
+
 async function loginFn(credentials: LoginCredentials) {
   const data = await apiFetch<CurrentUser | { user: CurrentUser }>('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify(credentials),
   });
-  if (data && typeof data === 'object' && 'user' in data) {
+  if (!data) {
+    throw new Error('Login failed: server returned an empty response');
+  }
+  if (isCurrentUser(data)) {
+    return data;
+  }
+  if (typeof data === 'object' && 'user' in data && isCurrentUser(data.user)) {
     return data.user;
   }
-  return data;
+  throw new Error('Login failed: unexpected response format');
 }
 
 export function useLogin() {

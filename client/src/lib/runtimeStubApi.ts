@@ -95,12 +95,12 @@ const ensureUser = (state: StubState) => {
 };
 
 const parseOptionalPostId = (value: unknown): number | undefined => {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value;
   if (typeof value !== 'string') return undefined;
   const trimmed = value.trim();
   if (!trimmed) return undefined;
   const parsed = parseInt(trimmed, 10);
-  return Number.isFinite(parsed) ? parsed : undefined;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
 };
 
 export async function runtimeStubApiFetch<T>(path: string, options?: RequestInit): Promise<T> {

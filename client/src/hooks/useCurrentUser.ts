@@ -8,7 +8,11 @@ export interface CurrentUser {
 }
 
 async function fetchCurrentUser(): Promise<CurrentUser> {
-  return apiFetch<CurrentUser>('/api/auth/me');
+  const currentUser = await apiFetch<CurrentUser>('/api/auth/me');
+  if (!currentUser) {
+    throw new Error('Not authenticated');
+  }
+  return currentUser;
 }
 
 export function useCurrentUser() {
