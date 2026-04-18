@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { buildApiUrl } from '@/lib/api';
 
 interface RegisterCredentials {
   email: string;
@@ -7,7 +8,7 @@ interface RegisterCredentials {
 }
 
 async function registerFn(credentials: RegisterCredentials) {
-  const res = await fetch('/api/auth/register', {
+  const res = await fetch(buildApiUrl('/api/auth/register'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
