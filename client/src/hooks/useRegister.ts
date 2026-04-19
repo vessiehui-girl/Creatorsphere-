@@ -1,5 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type { CurrentUser } from './useCurrentUser';
+import { CURRENT_USER_QUERY_KEY, MOCK_AUTH_USER_STORAGE_KEY } from '@/lib/auth';
 
 interface RegisterCredentials {
   email: string;
@@ -11,9 +12,11 @@ interface RegisterResponse {
   user: CurrentUser;
 }
 
-const MOCK_AUTH_USER_STORAGE_KEY = 'mockAuthUser';
+interface RegisterMutateOptions {
+  onSuccess?: (data: RegisterResponse) => void;
+}
 
-async function registerFn(credentials: RegisterCredentials) {
+function createRegisterResponse(credentials: RegisterCredentials): RegisterResponse {
   const user: CurrentUser = {
     id: Date.now(),
     email: credentials.email,
@@ -24,24 +27,20 @@ async function registerFn(credentials: RegisterCredentials) {
     window.localStorage.setItem(MOCK_AUTH_USER_STORAGE_KEY, JSON.stringify(user));
   }
 
-  return Promise.resolve<RegisterResponse>({ user });
+  return { user };
 }
 
 export function useRegister() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: registerFn,
-    onSuccess: (data) => {
-      queryClient.setQueryData(['currentUser'], data.user);
+  const mutate = (credentials: RegisterCredentials, options?: RegisterMutateOptions) => {
+    const data = createRegisterResponse(credentials);
+    queryClient.setQueryData(CURRENT_USER_QUERY_KEY, data.user);
+    options?.onSuccess?.(data);
+  };
 
-      if (typeof window !== 'undefined') {
-        window.setTimeout(() => {
-          if (window.location.pathname !== '/onboarding/platforms') {
-            window.history.pushState({}, '', '/onboarding/platforms');
-            window.dispatchEvent(new PopStateEvent('popstate'));
-          }
-        }, 0);
-      }
-    },
-  });
+  return {
+    mutate,
+    isPending: false,
+    error: null as Error | null,
+  };
 }

@@ -1,31 +1,45 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { buildApiUrl } from '@/lib/api';
+import { useQueryClient } from '@tanstack/react-query';
+import type { CurrentUser } from './useCurrentUser';
+import { CURRENT_USER_QUERY_KEY, MOCK_AUTH_USER_STORAGE_KEY } from '@/lib/auth';
 
 interface LoginCredentials {
   email: string;
   password: string;
 }
 
-async function loginFn(credentials: LoginCredentials) {
-  const res = await fetch(buildApiUrl('/api/auth/login'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(credentials),
-  });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || 'Login failed');
+interface LoginResponse {
+  user: CurrentUser;
+}
+
+interface LoginMutateOptions {
+  onSuccess?: (data: LoginResponse) => void;
+}
+
+function createLoginResponse(credentials: LoginCredentials): LoginResponse {
+  const user: CurrentUser = {
+    id: Date.now(),
+    email: credentials.email,
+    name: null,
+  };
+
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(MOCK_AUTH_USER_STORAGE_KEY, JSON.stringify(user));
   }
-  return res.json().catch(() => null);
+
+  return { user };
 }
 
 export function useLogin() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: loginFn,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-    },
-  });
+  const mutate = (credentials: LoginCredentials, options?: LoginMutateOptions) => {
+    const data = createLoginResponse(credentials);
+    queryClient.setQueryData(CURRENT_USER_QUERY_KEY, data.user);
+    options?.onSuccess?.(data);
+  };
+
+  return {
+    mutate,
+    isPending: false,
+    error: null as Error | null,
+  };
 }
