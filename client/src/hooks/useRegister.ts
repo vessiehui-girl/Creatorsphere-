@@ -16,9 +16,13 @@ interface RegisterMutateOptions {
   onSuccess?: (data: RegisterResponse) => void;
 }
 
+function buildMockUserId(): number {
+  return Number(`${Date.now()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`);
+}
+
 function createRegisterResponse(credentials: RegisterCredentials): RegisterResponse {
   const user: CurrentUser = {
-    id: Date.now(),
+    id: buildMockUserId(),
     email: credentials.email,
     name: credentials.name ?? null,
   };

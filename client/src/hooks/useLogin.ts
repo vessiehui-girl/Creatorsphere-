@@ -15,11 +15,37 @@ interface LoginMutateOptions {
   onSuccess?: (data: LoginResponse) => void;
 }
 
+function buildMockUserId(): number {
+  return Number(`${Date.now()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`);
+}
+
+function readStoredUser(): CurrentUser | null {
+  if (typeof window === 'undefined') return null;
+  const storedUser = window.localStorage.getItem(MOCK_AUTH_USER_STORAGE_KEY);
+  if (!storedUser) return null;
+
+  try {
+    const parsed = JSON.parse(storedUser) as Partial<CurrentUser>;
+    if (typeof parsed.id === 'number' && typeof parsed.email === 'string') {
+      return {
+        id: parsed.id,
+        email: parsed.email,
+        name: parsed.name ?? null,
+      };
+    }
+  } catch {
+    // ignore invalid stub data
+  }
+
+  return null;
+}
+
 function createLoginResponse(credentials: LoginCredentials): LoginResponse {
+  const existingUser = readStoredUser();
   const user: CurrentUser = {
-    id: Date.now(),
+    id: existingUser?.id ?? buildMockUserId(),
     email: credentials.email,
-    name: null,
+    name: existingUser?.name ?? null,
   };
 
   if (typeof window !== 'undefined') {

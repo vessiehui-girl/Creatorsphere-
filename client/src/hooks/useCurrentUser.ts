@@ -27,7 +27,7 @@ function fetchCurrentUser(): CurrentUser {
       };
     }
   } catch {
-    // fall through
+    // ignore invalid stub data
   }
 
   window.localStorage.removeItem(MOCK_AUTH_USER_STORAGE_KEY);
