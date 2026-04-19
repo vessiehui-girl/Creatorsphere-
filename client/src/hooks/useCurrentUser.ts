@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { buildApiUrl } from '@/lib/api';
+import { CURRENT_USER_QUERY_KEY, MOCK_AUTH_USER_STORAGE_KEY } from '@/lib/auth';
 
 export interface CurrentUser {
   id: number;
@@ -7,20 +7,36 @@ export interface CurrentUser {
   name?: string | null;
 }
 
-async function fetchCurrentUser(): Promise<CurrentUser> {
-  const res = await fetch(buildApiUrl('/api/auth/me'), { credentials: 'include' });
-  if (res.status === 401) {
+function fetchCurrentUser(): CurrentUser {
+  if (typeof window === 'undefined') {
     throw new Error('Not authenticated');
   }
-  if (!res.ok) {
-    throw new Error('Failed to fetch user');
+
+  const storedUser = window.localStorage.getItem(MOCK_AUTH_USER_STORAGE_KEY);
+  if (!storedUser) {
+    throw new Error('Not authenticated');
   }
-  return res.json();
+
+  try {
+    const parsed = JSON.parse(storedUser) as Partial<CurrentUser>;
+    if (typeof parsed.id === 'number' && typeof parsed.email === 'string') {
+      return {
+        id: parsed.id,
+        email: parsed.email,
+        name: parsed.name ?? null,
+      };
+    }
+  } catch {
+    // ignore invalid stub data
+  }
+
+  window.localStorage.removeItem(MOCK_AUTH_USER_STORAGE_KEY);
+  throw new Error('Not authenticated');
 }
 
 export function useCurrentUser() {
   return useQuery<CurrentUser, Error>({
-    queryKey: ['currentUser'],
+    queryKey: CURRENT_USER_QUERY_KEY,
     queryFn: fetchCurrentUser,
     retry: false,
   });
