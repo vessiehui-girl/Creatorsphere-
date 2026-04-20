@@ -45,6 +45,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ onComplete }) => {
             value={variableChange}
             onChange={(event) => setVariableChange(event.target.value)}
             placeholder="e.g. changed CTA from offer A to B"
+            aria-required={result === 'failed'}
             className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2"
           />
         </label>

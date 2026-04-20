@@ -97,15 +97,14 @@ export const loopReducer = (state: LoopState, event: LoopEvent): LoopState => {
         return state;
       }
 
-      const variableChange = event.variableChange.trim();
-      if (event.result === 'failed' && !variableChange) {
+      if (event.result === 'failed' && !event.variableChange.trim()) {
         return state;
       }
 
       return {
         ...state,
         result: event.result,
-        variableChange,
+        variableChange: event.variableChange.trim(),
         stage: 'CHECK',
       };
     }
