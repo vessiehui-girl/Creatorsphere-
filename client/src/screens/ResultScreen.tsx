@@ -12,7 +12,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ onComplete }) => {
 
   const submit = () => {
     if (result === 'failed' && !variableChange.trim()) {
-      setError('Result requires variable change when failed.');
+      setError('Please describe what variable was changed when the action failed.');
       return;
     }
 

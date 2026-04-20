@@ -13,7 +13,7 @@ const ResetScreen: React.FC<ResetScreenProps> = ({ onComplete }) => {
     const [outcome = '', constraint = ''] = outcomeAndConstraint.split('|').map((value) => value.trim());
 
     if (!action.trim() || !outcome || !constraint) {
-      setError('Reset requires action + outcome + constraint. Use: outcome | constraint');
+      setError('All fields are required: action, outcome, and constraint. Format: outcome | constraint');
       return;
     }
 
