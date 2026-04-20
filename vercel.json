@@ -1,13 +1,13 @@
 {
   "version": 2,
   "framework": "vite",
-  "buildCommand": "npm run build:frontend",
+  "buildCommand": "npm run build",
   "installCommand": "npm install",
   "outputDirectory": "dist",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/((?!.*\\.(js|css|map|json|png|jpg|jpeg|gif|svg|ico|webp|avif|woff|woff2|ttf|eot)$).*)",
-      "destination": "/index.html"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
